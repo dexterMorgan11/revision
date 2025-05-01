@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Revision Reminders (Calendar Tracker)</title>
+    <!-- Add Google Font link -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- Light Mode Styles (Default) --- */
+        body {
+            /* Use the new font */
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .container {
+            max-width: 800px; /* Wider to accommodate calendar */
+            margin: 0 auto;
+            background: #fff;
+            /* Slightly enhanced shadow for depth */
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        h1, h2 {
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 20px;
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+        h1 { margin-top: 0; }
+
+        .mode-toggle-container {
+             text-align: right;
+             margin-bottom: 15px;
+        }
+
+        .mode-toggle-button {
+            padding: 5px 10px;
+            background-color: #ccc;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .mode-toggle-button:hover {
+            background-color: #bbb;
+        }
+
+
+        .add-lecture, .details-section, .calendar-display {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #e9e9e9;
+            border-radius: 4px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+            transition: color 0.3s ease;
+        }
+        input[type="text"], input[type="date"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            background-color: #fff;
+            color: #333;
+             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+         input[type="date"] {
+             width: auto;
+             margin-right: 10px;
+         }
+
+        button:not(.mode-toggle-button):not(.calendar-nav-button):not(.delete-button) { /* Target action buttons */
+            display: block;
+            width: 100%;
+            padding: 10px 12px; /* Adjusted padding slightly */
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600; /* Use bolder font weight if available */
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease; /* Added transform and shadow */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+        }
+        button:not(.mode-toggle-button):not(.calendar-nav-button):not(.delete-button):hover {
+            background-color: #4cae4c;
+            transform: translateY(-1px); /* Slight lift on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Enhance shadow on hover */
+        }
+
+        .delete-button {
+             padding: 4px 8px;
+             background-color: #dc3545; /* Red */
+             color: white;
+             border: none;
+             border-radius: 4px;
+             cursor: pointer;
+             font-size: 0.8rem;
+             margin-left: 10px;
+             transition: background-color 0.2s ease;
+             float: right; /* Position to the right */
+        }
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+
+
+        /* Calendar specific styles */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .calendar-header button {
+            padding: 5px 10px;
+            font-size: 1rem;
+            cursor: pointer;
+             border-radius: 4px;
+             border: 1px solid #ccc;
+             background-color: #f9f9f9;
+             transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+         .calendar-header button:hover {
+             background-color: #eee;
+         }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); /* 7 days a week */
+            gap: 5px; /* Space between cells */
+            text-align: center;
+        }
+
+        .calendar-day-header {
+            font-weight: bold;
+            padding: 8px 0;
+            background-color: #ddd;
+            border-radius: 4px;
+             transition: background-color 0.3s ease;
+        }
+
+        .calendar-day {
+            padding: 10px 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff; /* Default background */
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+            font-size: 0.9em;
+            position: relative; /* Needed for positioning percentage */
+        }
+        .calendar-day:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+        }
+         .calendar-day.empty {
+             background-color: #e9e9e9;
+             cursor: default;
+             border-color: #ddd;
+         }
+         .calendar-day.empty:hover {
+             background-color: #e9e9e9; /* No hover effect on empty cells */
+             transform: none;
+         }
+         .calendar-day.today {
+             border-color: #007bff;
+             box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+         }
+
+        .day-number {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 3px;
+            color: #333; /* Default color */
+             transition: color 0.3s ease;
+        }
+
+        .completion-percentage {
+            font-size: 0.8em;
+            color: #666; /* Default percentage text color */
+            display: block;
+            margin-top: 3px;
+            transition: color 0.3s ease;
+        }
+
+        /* --- Percentage color coding for the DAY CELL BACKGROUND --- */
+        .calendar-day.percentage-0 {
+             background-color: #ffdddd; /* Light Red */
+             border-color: #dc3545; /* Red border */
+        }
+        .calendar-day.percentage-low {
+            background-color: #fff3cd; /* Light Yellow/Orange */
+            border-color: #ffc107; /* Yellow/Orange border */
+        }
+        .calendar-day.percentage-mid {
+            background-color: #d4edda; /* Light Green */
+            border-color: #28a745; /* Green border */
+        }
+         /* Optional: A different style for high completion but not 100% */
+        .calendar-day.percentage-high {
+            background-color: #cfe2ff; /* Light Blue */
+            border-color: #007bff; /* Blue border */
+        }
+        .calendar-day.percentage-100 {
+            background-color: #c3e6cb; /* Slightly stronger light green */
+            border-color: #28a745; /* Strong Green border */
+            font-weight: bold;
+        }
+
+
+        #selectedDateDisplay {
+            margin-top: 15px;
+            color: #333;
+            font-size: 1.2em;
+            transition: color 0.3s ease;
+        }
+
+        #lecturesOnSelectedDate div {
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+             transition: background-color 0.3s ease, border-color 0.3s ease;
+             position: relative; /* Needed for delete button float */
+        }
+         #lecturesOnSelectedDate h3 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: #333;
+             transition: color 0.3s ease;
+             margin-right: 60px; /* Make space for the delete button */
+        }
+        #lecturesOnSelectedDate p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: #666;
+             transition: color 0.3s ease;
+        }
+
+        /* Style for the checkbox and label container */
+        .reminder-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            cursor: pointer;
+            padding: 5px; /* Add some padding */
+            border-radius: 4px; /* Add border-radius */
+            transition: background-color 0.2s ease; /* Add transition for hover */
+        }
+
+        .reminder-item:hover {
+             background-color: #eee; /* Light background on hover */
+        }
+
+        .reminder-item input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .reminder-item label {
+             margin: 0;
+             font-weight: normal;
+             cursor: pointer;
+             flex-grow: 1;
+        }
+
+        .reminder-item.completed label {
+            text-decoration: line-through;
+            color: #888;
+             transition: color 0.3s ease;
+        }
+
+
+        /* --- Dark Mode Styles --- */
+        body.dark-mode {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+         body.dark-mode .container {
+            background: #2d2d2d;
+            /* Adjust shadow for dark mode */
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+         }
+         body.dark-mode h1, body.dark-mode h2 {
+            color: #bbbbbb;
+            border-color: #444;
+         }
+         body.dark-mode .mode-toggle-button {
+             background-color: #555;
+             color: #eee;
+         }
+         body.dark-mode .mode-toggle-button:hover {
+             background-color: #666;
+         }
+         body.dark-mode .calendar-header button {
+             background-color: #4a4a4a;
+             border-color: #666;
+             color: #eee;
+         }
+          body.dark-mode .calendar-header button:hover {
+             background-color: #5a5a5a;
+          }
+         body.dark-mode .calendar-day-header {
+             background-color: #555;
+             color: #eee;
+         }
+
+         body.dark-mode .add-lecture, body.dark-mode .details-section, body.dark-mode .calendar-display {
+            background-color: #3a3a3a;
+            border-color: #555;
+         }
+         body.dark-mode label {
+             color: #e0e0e0;
+         }
+         body.dark-mode input[type="text"], body.dark-mode input[type="date"] {
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            border-color: #666;
+         }
+         body.dark-mode .calendar-day {
+             background-color: #4a4a4a; /* Default dark mode day cell background */
+             border-color: #666;
+             color: #ccc; /* Default text color */
+         }
+         body.dark-mode .calendar-day:hover {
+             background-color: #5a5a5a;
+         }
+         body.dark-mode .calendar-day.empty {
+             background-color: #3a3a3a;
+             border-color: #555;
+         }
+         body.dark-mode .calendar-day.empty:hover {
+             background-color: #3a3a3a;
+             transform: none;
+         }
+         body.dark-mode .calendar-day.today {
+             border-color: #0099ff; /* Brighter blue for dark mode */
+             box-shadow: 0 0 5px rgba(0, 153, 255, 0.5);
+         }
+         body.dark-mode .day-number {
+             color: #eee;
+         }
+         body.dark-mode .completion-percentage {
+             color: #bbb; /* Default dark mode percentage text color */
+         }
+
+         /* --- Dark mode percentage color coding for the DAY CELL BACKGROUND --- */
+         body.dark-mode .calendar-day.percentage-0 {
+             background-color: #5a3a3a; /* Darker Red */
+             border-color: #ff6666; /* Lighter Red border */
+         }
+         body.dark-mode .calendar-day.percentage-low {
+            background-color: #5a503a; /* Darker Yellow/Orange */
+            border-color: #ffdb7d; /* Lighter Yellow/Orange border */
+         }
+         body.dark-mode .calendar-day.percentage-mid {
+            background-color: #3a5a3a; /* Darker Green */
+            border-color: #77dd77; /* Lighter Green border */
+         }
+          /* Optional: Dark mode high completion but not 100% */
+         body.dark-mode .calendar-day.percentage-high {
+            background-color: #3a4a5a; /* Darker Blue */
+            border-color: #66b3ff; /* Lighter Blue border */
+         }
+         body.dark-mode .calendar-day.percentage-100 {
+            background-color: #4a6a4a; /* Slightly stronger dark green */
+            border-color: #77dd77; /* Strong Lighter Green border */
+         }
+
+
+         body.dark-mode #selectedDateDisplay {
+            color: #e0e0e0;
+         }
+         body.dark-mode #lecturesOnSelectedDate div {
+            background-color: #4a4a4a;
+            border-color: #666;
+         }
+         body.dark-mode #lecturesOnSelectedDate h3 {
+            color: #eeeeee;
+         }
+         body.dark-mode #lecturesOnSelectedDate p {
+            color: #cccccc;
+         }
+         body.dark-mode .reminder-item.completed label {
+            color: #777;
+         }
+
+         body.dark-mode .delete-button {
+             background-color: #994444; /* Darker red */
+             color: #eee;
+         }
+          body.dark-mode .delete-button:hover {
+             background-color: #aa5555; /* Slightly lighter darker red */
+          }
+
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="mode-toggle-container">
+             <button id="modeToggle" class="mode-toggle-button">Toggle Dark Mode</button>
+        </div>
+
+        <h1>Lecture Revision Reminders</h1>
+
+        <div class="add-lecture">
+            <h2>Add New Lecture</h2>
+            <label for="lectureName">Lecture Name:</label>
+            <input type="text" id="lectureName" placeholder="e.g., Thermodynamics Lecture 5">
+            <button onclick="addLecture()">Add Lecture & Schedule Reminders</button>
+        </div>
+
+        <div class="calendar-display">
+             <h2>Revision Progress Calendar</h2>
+             <div class="calendar-header">
+                 <button id="prevMonth" class="calendar-nav-button">&lt; Prev Month</button>
+                 <h3 id="currentMonthYear">Month Year</h3>
+                 <button id="nextMonth" class="calendar-nav-button">Next Month &gt;</button>
+             </div>
+             <div id="calendarGrid" class="calendar-grid">
+                 <!-- Calendar headers and days will be generated here -->
+             </div>
+        </div>
+
+
+        <div class="details-section">
+            <h2>Reminders for Selected Date</h2>
+            <!-- The date input from previous versions is now linked to calendar selection -->
+            <input type="date" id="calendarDate" style="display: none;"> <!-- Keep hidden but update its value -->
+
+            <h3 id="selectedDateDisplay"></h3>
+            <div id="lecturesOnSelectedDate">
+                <!-- Lectures for the selected date will be listed here by JavaScript -->
+                <p>Select a date on the calendar above.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DATA_STORAGE_KEY = 'lectureRemindersDataV7'; // New key for this version with delete
+        const DARK_MODE_STORAGE_KEY = 'darkModeEnabled';
+
+        let currentCalendarDate = new Date();
+
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+                            "July", "August", "September", "October", "November", "December"];
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+
+        // Function to get today's date as YYYY-MM-DD string
+        function getTodayString() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+         // Function to format a Date object as YYYY-MM-DD string
+        function formatDateString(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+            const day = dateObj.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+
+        // Function to calculate a date string N days from a given date string (YYYY-MM-DD)
+        function calculateDateString(startDateString, daysToAdd) {
+            const date = new Date(startDateString + 'T00:00:00');
+            date.setDate(date.getDate() + daysToAdd);
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Function to load data from localStorage
+        function loadReminders() {
+            try {
+                const data = localStorage.getItem(DATA_STORAGE_KEY);
+                const reminders = data ? JSON.parse(data) : [];
+                // Ensure loaded data has expected properties (for backward compatibility if needed)
+                return reminders.map(lecture => {
+                    if (lecture.completed1 === undefined) lecture.completed1 = false;
+                    if (lecture.completed2 === undefined) lecture.completed2 = false;
+                    if (lecture.completed3 === undefined) lecture.completed3 = false;
+                    if (lecture.id === undefined) lecture.id = Date.now().toString() + Math.random().toString(16).slice(2); // Add a simple ID if missing
+                    return lecture;
+                });
+            } catch (e) {
+                console.error("Error loading reminders from localStorage:", e);
+                return [];
+            }
+        }
+
+        // Function to save data to localStorage
+        function saveReminders(reminders) {
+             try {
+                localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(reminders));
+             } catch (e) {
+                 console.error("Error saving reminders to localStorage:", e);
+             }
+        }
+
+        // Function to add a new lecture
+        function addLecture() {
+            const lectureNameInput = document.getElementById('lectureName');
+            const lectureName = lectureNameInput.value.trim();
+
+            if (lectureName === '') {
+                alert('Please enter a lecture name.');
+                return;
+            }
+
+            const entryDate = getTodayString();
+
+            const reminderDate1 = calculateDateString(entryDate, 1);
+            const reminderDate2 = calculateDateString(entryDate, 3);
+            const reminderDate3 = calculateDateString(entryDate, 7);
+
+            const reminders = loadReminders();
+
+            const isDuplicate = reminders.some(lecture => lecture.name.toLowerCase() === lectureName.toLowerCase());
+            if (isDuplicate) {
+                 alert(`Lecture "${lectureName}" already exists.`);
+                 return;
+            }
+
+            const newLecture = {
+                id: Date.now().toString() + Math.random().toString(16).slice(2), // Unique ID
+                name: lectureName,
+                entryDate: entryDate,
+                reminderDate1: reminderDate1,
+                reminderDate2: reminderDate2,
+                reminderDate3: reminderDate3,
+                completed1: false,
+                completed2: false,
+                completed3: false
+            };
+
+            reminders.push(newLecture);
+            saveReminders(reminders);
+
+            // After adding, re-render the calendar if any of the new reminder dates are in the current month
+             const addedReminderDates = [reminderDate1, reminderDate2, reminderDate3];
+             const selectedMonth = currentCalendarDate.getMonth();
+             const selectedYear = currentCalendarDate.getFullYear();
+             const needsCalendarUpdate = addedReminderDates.some(dateStr => {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                // Note: month from split is 1-indexed, Date object month is 0-indexed
+                return year === selectedYear && (month - 1) === selectedMonth;
+             });
+
+             if (needsCalendarUpdate) {
+                renderCalendar(selectedYear, selectedMonth);
+             }
+
+
+            // Update the display for the currently selected date if necessary
+            const selectedDate = document.getElementById('calendarDate').value;
+            if (selectedDate && addedReminderDates.includes(selectedDate)) {
+                 displayLecturesForDate(selectedDate);
+            }
+
+            lectureNameInput.value = '';
+            console.log(`Added: ${newLecture.name}, Reminders: ${newLecture.reminderDate1}, ${newLecture.reminderDate2}, ${newLecture.reminderDate3}`);
+        }
+
+        // Function to get completion status for a specific date
+        function getCompletionStatusForDate(dateString) {
+             const reminders = loadReminders();
+             let totalDue = 0;
+             let totalCompleted = 0;
+
+             reminders.forEach(lecture => {
+                 if (lecture.reminderDate1 === dateString) {
+                     totalDue++;
+                     if (lecture.completed1) totalCompleted++;
+                 }
+                 if (lecture.reminderDate2 === dateString) {
+                     totalDue++;
+                     if (lecture.completed2) totalCompleted++;
+                 }
+                 if (lecture.reminderDate3 === dateString) {
+                     totalDue++;
+                     if (lecture.completed3) totalCompleted++;
+                 }
+             });
+
+             // Percentage is 100% if nothing is due
+             const percentage = totalDue === 0 ? 100 : Math.round((totalCompleted / totalDue) * 100);
+
+             return {
+                 total: totalDue,
+                 completed: totalCompleted,
+                 percentage: percentage
+             };
+        }
+
+
+        // Function to display lectures scheduled for a specific date
+        function displayLecturesForDate(dateString) {
+            const reminders = loadReminders();
+            const lecturesListDiv = document.getElementById('lecturesOnSelectedDate');
+            const selectedDateDisplay = document.getElementById('selectedDateDisplay');
+            const calendarDateInput = document.getElementById('calendarDate'); // Get the hidden date input
+
+            // Update the hidden date input value
+            calendarDateInput.value = dateString;
+
+            selectedDateDisplay.textContent = `Reminders for: ${dateString}`;
+            lecturesListDiv.innerHTML = ''; // Clear current list
+
+            const lecturesDueToday = reminders.filter(lecture =>
+                lecture.reminderDate1 === dateString ||
+                lecture.reminderDate2 === dateString ||
+                lecture.reminderDate3 === dateString
+            );
+
+            if (lecturesDueToday.length === 0) {
+                lecturesListDiv.innerHTML = '<p>No lectures scheduled for this date.</p>';
+                return;
+            }
+
+            lecturesDueToday.forEach(lecture => {
+                const lectureDiv = document.createElement('div');
+                lectureDiv.dataset.lectureId = lecture.id; // Add lecture ID to the container div
+
+                // Add the delete button first within the div
+                 lectureDiv.innerHTML = `
+                    <button class="delete-button" data-lecture-id="${lecture.id}">Delete</button>
+                    <h3>${lecture.name}</h3>`; // Start with lecture name and button
+
+                // Check and display each reminder type due on this date with a checkbox
+                if (lecture.reminderDate1 === dateString) {
+                    const isCompleted = lecture.completed1;
+                    lectureDiv.innerHTML += `
+                        <div class="reminder-item ${isCompleted ? 'completed' : ''}">
+                            <input type="checkbox"
+                                id="chk-${lecture.id}-1"
+                                data-lecture-id="${lecture.id}"
+                                data-reminder-num="1"
+                                ${isCompleted ? 'checked' : ''}>
+                            <label for="chk-${lecture.id}-1">Revision 1 (1 day)</label>
+                        </div>
+                    `;
+                }
+                 if (lecture.reminderDate2 === dateString) {
+                     const isCompleted = lecture.completed2;
+                     lectureDiv.innerHTML += `
+                         <div class="reminder-item ${isCompleted ? 'completed' : ''}">
+                             <input type="checkbox"
+                                 id="chk-${lecture.id}-2"
+                                 data-lecture-id="${lecture.id}"
+                                 data-reminder-num="2"
+                                 ${isCompleted ? 'checked' : ''}>
+                             <label for="chk-${lecture.id}-2">Revision 2 (3 days)</label>
+                         </div>
+                     `;
+                 }
+                 if (lecture.reminderDate3 === dateString) {
+                     const isCompleted = lecture.completed3;
+                     lectureDiv.innerHTML += `
+                         <div class="reminder-item ${isCompleted ? 'completed' : ''}">
+                             <input type="checkbox"
+                                 id="chk-${lecture.id}-3"
+                                 data-lecture-id="${lecture.id}"
+                                 data-reminder-num="3"
+                                 ${isCompleted ? 'checked' : ''}>
+                             <label for="chk-${lecture.id}-3">Revision 3 (7 days)</label>
+                         </div>
+                     `;
+                 }
+
+                 lectureDiv.innerHTML += `<p>Added On: ${lecture.entryDate}</p>`; // Add entry date at the end
+
+                lecturesListDiv.appendChild(lectureDiv);
+            });
+        }
+
+        // Function to update the completion status of a specific reminder
+        function updateCompletionStatus(lectureId, reminderNum, isChecked) {
+            const reminders = loadReminders();
+            const lectureIndex = reminders.findIndex(lecture => lecture.id === lectureId);
+
+            if (lectureIndex > -1) {
+                const lecture = reminders[lectureIndex];
+                let dateAffected = null;
+
+                if (reminderNum === 1) {
+                    lecture.completed1 = isChecked;
+                    dateAffected = lecture.reminderDate1;
+                } else if (reminderNum === 2) {
+                    lecture.completed2 = isChecked;
+                    dateAffected = lecture.reminderDate2;
+                } else if (reminderNum === 3) {
+                    lecture.completed3 = isChecked;
+                    dateAffected = lecture.reminderDate3;
+                }
+
+                reminders[lectureIndex] = lecture;
+                saveReminders(reminders);
+
+                console.log(`Updated lecture ${lecture.name} (ID: ${lecture.id}) reminder ${reminderNum} to ${isChecked}`);
+
+                // Update the specific displayed item's style immediately
+                const checkbox = document.querySelector(`#lecturesOnSelectedDate input[data-lecture-id="${lectureId}"][data-reminder-num="${reminderNum}"]`);
+                if (checkbox) {
+                    const reminderItemDiv = checkbox.closest('.reminder-item');
+                    if (reminderItemDiv) {
+                        if (isChecked) {
+                            reminderItemDiv.classList.add('completed');
+                        } else {
+                            reminderItemDiv.classList.remove('completed');
+                        }
+                    }
+                }
+
+                // Re-render the calendar for the affected month to update the percentage displayed
+                if (dateAffected) {
+                    const [year, month, day] = dateAffected.split('-').map(Number);
+                    const affectedDateObj = new Date(year, month - 1, day);
+
+                    if (affectedDateObj.getFullYear() === currentCalendarDate.getFullYear() &&
+                        affectedDateObj.getMonth() === currentCalendarDate.getMonth()) {
+                        renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+                        // Keep the same date selected in the details pane after re-render
+                         const selectedDate = document.getElementById('calendarDate').value;
+                         if(selectedDate) {
+                             displayLecturesForDate(selectedDate);
+                         }
+                    }
+                }
+
+
+            } else {
+                console.error(`Lecture with ID ${lectureId} not found.`);
+            }
+        }
+
+        // Function to delete a lecture by its ID
+        function deleteLecture(lectureId) {
+            if (confirm("Are you sure you want to delete this lecture and all its reminders?")) {
+                const reminders = loadReminders();
+                const originalReminders = [...reminders]; // Keep a copy to check affected dates
+
+                // Filter out the lecture with the matching ID
+                const updatedReminders = reminders.filter(lecture => lecture.id !== lectureId);
+
+                if (updatedReminders.length < originalReminders.length) { // Check if a lecture was actually removed
+                    saveReminders(updatedReminders); // Save the updated list
+
+                    console.log(`Deleted lecture with ID: ${lectureId}`);
+
+                    // Determine which months might be affected to re-render calendars
+                    const affectedDates = [];
+                    const deletedLecture = originalReminders.find(lecture => lecture.id === lectureId);
+                    if (deletedLecture) {
+                        affectedDates.push(deletedLecture.reminderDate1, deletedLecture.reminderDate2, deletedLecture.reminderDate3);
+                    }
+
+                    const selectedDate = document.getElementById('calendarDate').value;
+                    const selectedMonth = currentCalendarDate.getMonth();
+                    const selectedYear = currentCalendarDate.getFullYear();
+
+                    const needsCalendarUpdate = affectedDates.some(dateStr => {
+                         if (!dateStr) return false; // Handle potential null/undefined dates
+                         const [year, month, day] = dateStr.split('-').map(Number);
+                         return year === selectedYear && (month - 1) === selectedMonth;
+                    });
+
+
+                    // Re-render calendar if the deleted lecture affected the current month
+                    if (needsCalendarUpdate) {
+                       renderCalendar(selectedYear, selectedMonth);
+                    }
+
+
+                    // Re-display details for the current date (list will be updated automatically by displayLecturesForDate)
+                    if (selectedDate) {
+                         displayLecturesForDate(selectedDate);
+                    } else {
+                         // Should not happen, but as fallback
+                         displayLecturesForDate(getTodayString());
+                    }
+
+
+                } else {
+                    console.warn(`Lecture with ID ${lectureId} not found for deletion.`);
+                }
+            }
+        }
+
+
+        // --- Calendar Rendering ---
+
+        function renderCalendar(year, month) { // month is 0-indexed
+            const calendarGrid = document.getElementById('calendarGrid');
+            const currentMonthYearDisplay = document.getElementById('currentMonthYear');
+            const todayString = getTodayString();
+
+            currentCalendarDate = new Date(year, month, 1);
+            currentMonthYearDisplay.textContent = `${monthNames[month]} ${year}`;
+
+            calendarGrid.innerHTML = ''; // Clear previous grid
+
+            // Add day headers (Sun, Mon, ...)
+            dayNames.forEach(dayName => {
+                const headerDiv = document.createElement('div');
+                headerDiv.classList.add('calendar-day-header');
+                headerDiv.textContent = dayName;
+                calendarGrid.appendChild(headerDiv);
+            });
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const startingDayOfWeek = firstDayOfMonth.getDay(); // 0 = Sunday
+
+            // Add empty cells
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.classList.add('calendar-day', 'empty');
+                calendarGrid.appendChild(emptyDiv);
+            }
+
+            // Add day cells
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.classList.add('calendar-day');
+
+                const dateObj = new Date(year, month, day);
+                const dateString = formatDateString(dateObj);
+                dayDiv.dataset.date = dateString; // Store date
+
+                if (dateString === todayString) {
+                    dayDiv.classList.add('today');
+                }
+
+                const { total, completed, percentage } = getCompletionStatusForDate(dateString);
+
+                dayDiv.innerHTML = `<span class="day-number">${day}</span>`;
+
+                 if (total > 0) {
+                    // Determine percentage class for the day cell and percentage text
+                     let percentageClass = '';
+                     if (percentage === 0) percentageClass = 'percentage-0';
+                     else if (percentage > 0 && percentage < 50) percentageClass = 'percentage-low';
+                     else if (percentage >= 50 && percentage < 90) percentageClass = 'percentage-mid';
+                     else if (percentage >= 90 && percentage < 100) percentageClass = 'percentage-high'; // High completion before 100
+                     else if (percentage === 100) percentageClass = 'percentage-100';
+
+                     // Add the percentage class to the dayDiv itself for background/border coloring
+                     dayDiv.classList.add(percentageClass);
+
+                     // Add the percentage text span
+                     dayDiv.innerHTML += `<span class="completion-percentage">${percentage}%</span>`;
+
+                 } else {
+                     // If no reminders due, treat as 100% completed (nothing to do)
+                     dayDiv.classList.add('percentage-100');
+                     dayDiv.innerHTML += `<span class="completion-percentage">0 due</span>`;
+                 }
+
+
+                calendarGrid.appendChild(dayDiv);
+            }
+        }
+
+        function navigateMonth(delta) {
+             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+             renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+             // After changing month, show details for the 1st of the new month
+             const firstDayOfNewMonthString = formatDateString(new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1));
+             displayLecturesForDate(firstDayOfNewMonthString);
+        }
+
+
+        // --- Dark Mode Toggle Logic ---
+        function enableDarkMode() {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem(DARK_MODE_STORAGE_KEY, 'enabled');
+        }
+
+        function disableDarkMode() {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem(DARK_MODE_STORAGE_KEY, 'disabled');
+        }
+
+        function toggleDarkMode() {
+            if (document.body.classList.contains('dark-mode')) {
+                disableDarkMode();
+            } else {
+                enableDarkMode();
+            }
+        }
+
+        // --- Initialize on page load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const calendarDateInput = document.getElementById('calendarDate');
+            const modeToggleButton = document.getElementById('modeToggle');
+            const lectureNameInput = document.getElementById('lectureName');
+            const lecturesListDiv = document.getElementById('lecturesOnSelectedDate'); // Container for checkbox and delete events
+            const calendarGrid = document.getElementById('calendarGrid');
+            const prevMonthButton = document.getElementById('prevMonth');
+            const nextMonthButton = document.getElementById('nextMonth');
+
+
+            // --- Initialize Dark Mode ---
+            const savedMode = localStorage.getItem(DARK_MODE_STORAGE_KEY);
+            if (savedMode === 'disabled') {
+                disableDarkMode();
+            } else {
+                enableDarkMode(); // Default to dark mode
+            }
+            modeToggleButton.addEventListener('click', toggleDarkMode);
+
+
+            // --- Initialize Calendar & Details ---
+            const today = new Date();
+            renderCalendar(today.getFullYear(), today.getMonth());
+
+            // Set the hidden date input to today and display details for today initially
+            const todayString = getTodayString();
+            calendarDateInput.value = todayString;
+            displayLecturesForDate(todayString);
+
+            // Add event listeners for calendar navigation
+            prevMonthButton.addEventListener('click', () => navigateMonth(-1));
+            nextMonthButton.addEventListener('click', () => navigateMonth(1));
+
+            // Add event delegation listener for clicks on calendar days
+            calendarGrid.addEventListener('click', (event) => {
+                 const targetDay = event.target.closest('.calendar-day');
+                 if (targetDay && !targetDay.classList.contains('empty')) {
+                     const dateString = targetDay.dataset.date;
+                     displayLecturesForDate(dateString);
+                 }
+            });
+
+             // Add event delegation listener for events within the lectures list div
+             lecturesListDiv.addEventListener('click', (event) => {
+                 const target = event.target;
+
+                 // Handle Checkbox changes
+                 if (target.type === 'checkbox' && target.closest('.reminder-item')) {
+                     const lectureId = target.dataset.lectureId;
+                     const reminderNum = parseInt(target.dataset.reminderNum, 10);
+                     const isChecked = target.checked;
+
+                     if (lectureId && !isNaN(reminderNum)) {
+                         updateCompletionStatus(lectureId, reminderNum, isChecked);
+                     } else {
+                         console.error("Could not get lecture ID or reminder number from checkbox.", target);
+                     }
+                 }
+                 // Handle Delete Button clicks
+                 else if (target.classList.contains('delete-button')) {
+                     const lectureIdToDelete = target.dataset.lectureId;
+                     if (lectureIdToDelete) {
+                          deleteLecture(lectureIdToDelete);
+                     } else {
+                         console.error("Could not get lecture ID from delete button.", target);
+                     }
+                 }
+             });
+
+
+             // Optional: Add event listener for 'Enter' key on lecture name input
+            lectureNameInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addLecture();
+                }
+            });
+        });
+
+    </script>
+
+</body>
+</body>
+</html>
